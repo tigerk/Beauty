@@ -17,9 +17,8 @@ class Query
 
     public function __construct()
     {
-        $config    = \Beauty\App::config()->get('database');
-        $connect   = new Connector\MysqlConnector();
-        $this->pdo = $connect->connect($config[$this->identify]);
+        $factory   = new Connector\ConnectorFactory();
+        $this->pdo = $factory->connection($this->identify);
     }
 
     /**
