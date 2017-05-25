@@ -142,13 +142,21 @@ class App
         return $callable;
     }
 
+    /**
+     * 支持获取方法名调用
+     *
+     * @param $method
+     * @param $parameters
+     * @return mixed
+     * @throws \MethodNotFoundException
+     */
     public static function __callStatic($method, $parameters)
     {
         if (isset(self::$instance->$method)) {
             return self::$instance->$method;
         }
 
-        throw new \ClassNotFoundException('not found allowed class!');
+        throw new \MethodNotFoundException('method not found!');
     }
 
     public function instance($ins)
