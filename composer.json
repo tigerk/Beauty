@@ -1,0 +1,24 @@
+{
+    "name": "beauty/beauty",
+    "description": "The beauty Framework.",
+    "keywords": ["framework", "beauty"],
+    "license": "MIT",
+    "require": {
+        "php": ">=7.1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "6.1.*"
+    },
+    "autoload": {
+        "classmap": [
+          "Beauty",
+          "app"
+        ],
+        "exclude-from-classmap" : [
+          "app/config"
+        ],
+        "files": [
+          "Beauty/paths.php"
+        ]
+    }
+}
