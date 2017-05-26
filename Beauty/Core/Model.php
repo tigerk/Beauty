@@ -10,4 +10,6 @@ class Model extends Query
     {
         parent::__construct();
     }
+
+
 }
