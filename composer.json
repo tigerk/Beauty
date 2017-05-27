@@ -18,7 +18,8 @@
           "app/config"
         ],
         "files": [
-          "Beauty/paths.php"
+          "Beauty/paths.php",
+          "Beauty/errors.php"
         ]
     }
 }

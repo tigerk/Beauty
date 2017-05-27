@@ -103,7 +103,7 @@ class App
     {
         $callable = $this->dispatchRequest($this->request, $this->response);
         call_user_func($callable, $this);
-        // TODO restore_error_handler();
+
     }
 
     /**

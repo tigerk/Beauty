@@ -5,6 +5,11 @@
  */
 require 'vendor/autoload.php';
 
+/**
+ * set logger sub directory
+ */
+DLog::setLogger("Beauty");
+
 $app = new \Beauty\App();
 
 $app->get('/', 'TestController@test');
