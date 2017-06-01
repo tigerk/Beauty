@@ -59,16 +59,18 @@ class Router implements RouterInterface
      * get matched route
      *
      * @param $httpMethod
-     * @param $resourceUri
+     * @param string $resourceUri 请求的uri
      * @param bool|false $save
      * @return null
      */
     public function getMatchedRoutes($httpMethod, $resourceUri, $save = false)
     {
-        if (array_key_exists($resourceUri, $this->routes)) {
-            $this->currentRoute = $this->routes[$resourceUri];
-            if ($this->supportsHttpMethod($this->currentRoute, $httpMethod)) {
-                return $this->currentRoute;
+        foreach ($this->routes as $key => $val) {
+            if ($key == $resourceUri  || preg_match('#^' . $key . '$#', $resourceUri)) {
+                $this->currentRoute = $val;
+                if ($this->supportsHttpMethod($this->currentRoute, $httpMethod)) {
+                    return $this->currentRoute;
+                }
             }
         }
 

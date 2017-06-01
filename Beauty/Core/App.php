@@ -114,7 +114,7 @@ class App
         $route = $this->router->getMatchedRoutes($request->getMethod(), $request->getPathInfo(), false);
 
         if (is_null($route)) {
-            throw new \RouteNotFoundException('not found allowed method!');
+            throw new \RouteNotFoundException("uri path not found allowed method!");
         }
 
         $callable      = null;
