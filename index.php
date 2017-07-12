@@ -3,7 +3,7 @@
 /**
  * load class
  */
-require 'vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 /**
  * set logger sub directory
@@ -12,8 +12,9 @@ DLog::setLogger("Beauty");
 
 $app = new \Beauty\App();
 
-$app->get('/', 'TestController@test');
-$app->get('/', 'TestController@test');
-$app->get('/test', 'TestController@test');
+/**
+ * 加载路由文件
+ */
+require app_path() . 'routes.php';
 
 $app->run();

@@ -2,10 +2,17 @@
 
 class User extends \Beauty\Model
 {
-    protected $table = 'user';
+    protected $table = 'dg_user';
 
-    public function find()
+    public function getuser()
     {
-        return $this->query("select * from user");
+        $updatedrow = $this->update([
+            "nickname" => "kimhwawoon"
+        ], [
+            "user_id = " => "1000001"
+        ]);
+        return $this->find(["user_id"],[
+            "user_id =" => "1000001"
+        ]);
     }
 }

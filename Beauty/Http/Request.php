@@ -2,15 +2,16 @@
 
 namespace Beauty\Http;
 
-class Request {
+class Request
+{
 
-    const METHOD_HEAD = 'HEAD';
-    const METHOD_GET = 'GET';
-    const METHOD_POST = 'POST';
-    const METHOD_PUT = 'PUT';
-    const METHOD_PATCH = 'PATCH';
-    const METHOD_DELETE = 'DELETE';
-    const METHOD_OPTIONS = 'OPTIONS';
+    const METHOD_HEAD     = 'HEAD';
+    const METHOD_GET      = 'GET';
+    const METHOD_POST     = 'POST';
+    const METHOD_PUT      = 'PUT';
+    const METHOD_PATCH    = 'PATCH';
+    const METHOD_DELETE   = 'DELETE';
+    const METHOD_OPTIONS  = 'OPTIONS';
     const METHOD_OVERRIDE = '_METHOD';
 
     /**
@@ -20,6 +21,8 @@ class Request {
     protected $paths;
 
     protected $env;
+
+    protected $segments;
 
     public function __construct(Environment $env)
     {
@@ -65,18 +68,32 @@ class Request {
      */
     protected function parsePaths()
     {
-        $this->paths = array();
+        $this->paths             = array();
         $this->paths['physical'] = $_SERVER['SCRIPT_NAME'];
 
 
-        if(strpos($_SERVER['REQUEST_URI'], '?') !== false) {
+        if (strpos($_SERVER['REQUEST_URI'], '?') !== false) {
             $this->paths['virtual'] = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?'));
-        }
-        else
-        {
+        } else {
             $this->paths['virtual'] = $_SERVER['REQUEST_URI'];
         }
 
         return $this->paths;
+    }
+
+    protected function parseSegment()
+    {
+        foreach (explode("/", preg_replace("|/*(.+?)/*$|", "\\1", $this->getPathInfo())) as $val) {
+            if ($val != '') {
+                $this->segments[] = $val;
+            }
+        }
+
+        return $this->segments;
+    }
+
+    public function getSegment()
+    {
+        return $this->parseSegment();
     }
 } 

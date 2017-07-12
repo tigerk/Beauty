@@ -98,8 +98,7 @@ class App
     public function run()
     {
         $callable = $this->dispatchRequest($this->request, $this->response);
-        call_user_func($callable, $this);
-
+        call_user_func($callable, $this->request);
     }
 
     /**
@@ -113,9 +112,16 @@ class App
             throw new \RouteNotFoundException("uri path not found allowed method!");
         }
 
-        $callable      = null;
-        $matches       = array();
+        /**
+         * 支持function直接调用
+         */
         $lostrcallable = $this->router->getCurrentRouteCallable();
+        if ($lostrcallable instanceof \Closure && is_callable($lostrcallable)) {
+            return $lostrcallable;
+        }
+
+        $callable = null;
+        $matches  = array();
         if (is_string($lostrcallable) && preg_match('!^([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)$!', $lostrcallable, $matches)) {
             $class  = $matches[1];
             $method = $matches[2];
