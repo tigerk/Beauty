@@ -83,11 +83,11 @@ class Request
 
     protected function parseSegment()
     {
-        foreach (explode("/", preg_replace("|/*(.+?)/*$|", "\\1", $this->getPathInfo())) as $val) {
-            if ($val != '') {
-                $this->segments[] = $val;
-            }
-        }
+        $segments = explode('/', $this->getPathInfo());
+
+        $this->segments = array_values(array_filter($segments, function ($v) {
+            return $v != '';
+        }));
 
         return $this->segments;
     }
