@@ -1,111 +1,90 @@
 <?php
 
-/**
- * mysql连接器
- */
-
 namespace Beauty\Database\Connector;
 
-use PDO;
 
 class MysqlConnector
 {
+    CONST QUERY_MASTER_CHANNEL = "master";
+    CONST QUERY_SLAVE_CHANNEL  = "slave";
+
     /**
-     * The default PDO connection options.
+     * The active connection instances.
      *
      * @var array
      */
-    protected $options = array(
-        PDO::ATTR_CASE              => PDO::CASE_NATURAL,
-        PDO::ATTR_ERRMODE           => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_ORACLE_NULLS      => PDO::NULL_NATURAL,
-        PDO::ATTR_STRINGIFY_FETCHES => false,
-        PDO::ATTR_EMULATE_PREPARES  => true,
-    );
+    static $connections = [];
 
     /**
-     * Create a new PDO connection.
+     * The connection config
      *
-     * @param  string $dsn
-     * @param  array $config
-     * @param  array $options
-     * @return \PDO
+     * @var array
      */
-    public function createConnection($dsn, array $config, array $options)
-    {
-        $username = $config['username'];
-        $password = $config['password'];
+    protected $connectionsSettings = [];
 
-        return new PDO($dsn, $username, $password, $options);
+    function __construct()
+    {
+        $this->connectionsSettings = \Beauty\App::config()->get('database');
     }
 
     /**
-     * Establish a database connection.
+     * Get a database connection instance.
      *
-     * @param  array $config
-     * @return \PDO
+     * @param null $connectionName
+     * @param  string $channel
+     * @return object
+     * @throws \Exception
+     * @internal param string $name
      */
-    public function connect(array $config)
+    public function connection($connectionName = null, $channel = self::QUERY_MASTER_CHANNEL)
     {
-        $dsn = $this->getHostDsn($config);
-
-        $options = $this->getOptions($config);
-
-        // We need to grab the PDO options that should be used while making the brand
-        // new connection instance. The PDO options control various aspects of the
-        // connection's behavior, and some might be specified by the developers.
-        $connection = $this->createConnection($dsn, $config, $options);
-
-        if (isset($config['unix_socket'])) {
-            $connection->exec("use {$config['database']};");
+        // If we haven't created this connection, we'll create it based on the config
+        // provided in the application.
+        if ((self::$connections[$connectionName][$channel])) {
+            return self::$connections[$connectionName][$channel];
         }
 
-        $collation = $config['collation'];
-
-        // Next we will set the "names" and "collation" on the clients connections so
-        // a correct character set will be used by this client. The collation also
-        // is set on the server but needs to be set here on this client objects.
-        $charset = $config['charset'];
-
-        $names = "set names '$charset'" .
-            (!is_null($collation) ? " collate '$collation'" : '');
-
-        $connection->prepare($names)->execute();
-
-        // If the "strict" option has been configured for the connection we'll enable
-        // strict mode on all of these tables. This enforces some extra rules when
-        // using the MySQL database system and is a quicker way to enforce them.
-        if (isset($config['strict']) && $config['strict']) {
-            $connection->prepare("set session sql_mode='STRICT_ALL_TABLES'")->execute();
+        if (!isset($this->connectionsSettings[$connectionName])) {
+            throw new \Exception('Connection profile not set');
         }
 
-        return $connection;
+        $index   = array_rand($this->connectionsSettings[$connectionName][$channel]);
+        $params  = $this->connectionsSettings[$connectionName][$channel][$index];
+        $charset = $params['charset'];
+
+        if (empty($params['host'])) {
+            throw new \Exception('MySQL host or socket is not set');
+        }
+
+        $mysqli = new \mysqli($params['host'], $params['username'], $params['password'], $params['database'], $params['port']);
+        if ($mysqli->connect_error) {
+            throw new \Exception('Connect Error ' . $mysqli->connect_errno . ': ' . $mysqli->connect_error, $mysqli->connect_errno);
+        }
+
+        if (!empty($charset)) {
+            $mysqli->set_charset($charset);
+        }
+
+        self::$connections[$connectionName][$channel] = $mysqli;
+
+        return self::$connections[$connectionName][$channel];
     }
 
     /**
-     * Get the DSN string for a host / port configuration.
+     * A method to disconnect from the database
      *
-     * @param  array $config
-     * @return string
+     * @params string $connection connection name to disconnect
+     * @throws \Exception
+     * @return void
      */
-    protected function getHostDsn(array $config)
+    public function disconnectAll()
     {
-        extract($config);
+        foreach (self::$connections as $n => $conn) {
+            foreach ($conn as $channel => $cn) {
+                self::$connections[$n][$channel]->close();
+            }
+        }
 
-        return isset($config['port'])
-            ? "mysql:host={$host};port={$port};dbname={$database}"
-            : "mysql:host={$host};dbname={$database}";
+        self::$connections = null;
     }
-
-    /**
-     * Get the PDO options based on the configuration.
-     *
-     * @param  array $config
-     * @return array
-     */
-    public function getOptions(array $config)
-    {
-        return $this->options;
-    }
-
 }

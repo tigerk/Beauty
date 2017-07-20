@@ -1,5 +1,7 @@
 <?php
 
+use \Beauty\Model\User;
+
 class TestController extends \Beauty\Controller
 {
     public function __construct()
@@ -7,19 +9,20 @@ class TestController extends \Beauty\Controller
         parent::__construct();
     }
 
-    /**
-     * 测试获取数据
-     */
     public function test()
     {
-        echo 123;die();
+        $user           = new User();
+        $user->pwd      = 'heheda';
+        $user->nickname = 'heheda';
+        $id             = $user->save();
+        if ($id)
+            echo "user created with id = " . $id;
+
+        var_dump($user);
     }
 
-    /**
-     * 测试获取数据
-     */
-    public function test2()
+    public function test2(\Beauty\Http\Request $request)
     {
-        echo 'test2';
+        var_dump($request->getSegment());
     }
 }

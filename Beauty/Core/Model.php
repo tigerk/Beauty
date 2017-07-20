@@ -1,15 +1,10 @@
 <?php
 
-namespace Beauty;
+namespace Beauty\Model;
 
-use Beauty\Database\Query;
+use Beauty\Database\Dao;
 
-class Model extends Query
+class Model extends Dao
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
 
 }

@@ -16,6 +16,7 @@ return [
                 'username'  => 'root',
                 'password'  => 'douguo2015',
                 'charset'   => 'utf8',
+                'port'      => '3306',
                 'collation' => 'utf8_unicode_ci',
             ]
         ],
@@ -25,6 +26,7 @@ return [
                 'database'  => 'dg2010',
                 'username'  => 'root',
                 'password'  => 'douguo2015',
+                'port'      => '3306',
                 'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
             ]
@@ -37,6 +39,7 @@ return [
                 'database'  => 'dg2010',
                 'username'  => 'root',
                 'password'  => 'douguo2015',
+                'port'      => '3306',
                 'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
             ]
@@ -47,6 +50,7 @@ return [
                 'database'  => 'dg2010',
                 'username'  => 'root',
                 'password'  => 'douguo2015',
+                'port'      => '3306',
                 'charset'   => 'utf8',
                 'collation' => 'utf8_unicode_ci',
             ]
