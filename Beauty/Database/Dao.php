@@ -75,7 +75,7 @@ abstract class Dao
      *
      * @var string
      */
-    public $returnType = 'Array';
+    public $returnType = 'Object';
     /**
      * An array that holds has* objects which should be loaded togeather with main
      * object togeather with main object
@@ -104,13 +104,13 @@ abstract class Dao
     /**
      * Primary key for an object. 'id' is a default value.
      *
-     * @var stating
+     * @var string
      */
     protected $primaryKey = 'id';
     /**
      * Table name for an object. Class name will be used by default
      *
-     * @var stating
+     * @var string
      */
     protected $dbTable;
 
@@ -224,65 +224,10 @@ abstract class Dao
     }
 
     /**
-     * Helper function to create Client with Json return type
-     *
-     * @return Dao
-     */
-    private function JsonBuilder()
-    {
-        $this->returnType = 'Json';
-
-        return $this;
-    }
-
-    /**
-     * Helper function to create Client with Array return type
-     *
-     * @return Dao
-     */
-    private function ArrayBuilder()
-    {
-        $this->returnType = 'Array';
-
-        return $this;
-    }
-
-    /**
-     * Helper function to create Client with Object return type.
-     * Added for consistency. Works same way as new $objname ()
-     *
-     * @return Dao
-     */
-    private function ObjectBuilder()
-    {
-        $this->returnType = 'Object';
-
-        return $this;
-    }
-
-    /**
-     * Helper function to create a virtual table class
-     *
-     * @param string tableName Table name
-     * @return Dao
-     */
-    public static function table($tableName)
-    {
-        $tableName = preg_replace("/[^-a-z0-9_]+/i", '', $tableName);
-        if (!class_exists($tableName)) {
-            eval ("class $tableName extends \Beauty\Database\Dao {}");
-        }
-
-        return new $tableName ();
-    }
-
-    /**
      * @return mixed insert id or false in case of failure
      */
     public function insert()
     {
-        $this->getMasterConnection();
-
         if (!empty ($this->timestamps) && in_array("createdAt", $this->timestamps)) {
             $this->createdAt = date("Y-m-d H:i:s");
         }
@@ -291,7 +236,7 @@ abstract class Dao
         if (!$this->validate($sqlData)) {
             return false;
         }
-
+        $this->getMasterConnection();
         $id = $this->dbClient->insert($this->dbTable, $sqlData);
         if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
             $this->data[$this->primaryKey] = $id;
@@ -323,8 +268,8 @@ abstract class Dao
             $this->updatedAt = date("Y-m-d H:i:s");
         }
 
-        $this->getMasterConnection();
 
+        $this->getMasterConnection();
         $sqlData = $this->prepareData();
         if (!$this->validate($sqlData)) {
             return false;
@@ -342,8 +287,9 @@ abstract class Dao
      */
     public function save($data = null)
     {
-        if ($this->isNew)
+        if ($this->isNew) {
             return $this->insert();
+        }
 
         return $this->update($data);
     }
@@ -355,9 +301,11 @@ abstract class Dao
      */
     public function delete()
     {
-        if (empty ($this->data[$this->primaryKey]))
+        if (empty ($this->data[$this->primaryKey])) {
             return false;
+        }
 
+        $this->getMasterConnection();
         $this->dbClient->where($this->primaryKey, $this->data[$this->primaryKey]);
 
         return $this->dbClient->delete($this->dbTable);
@@ -367,10 +315,10 @@ abstract class Dao
      * Get object by primary key.
      *
      * @access public
-     * @param $id Primary Key
+     * @param $id string Primary Key
      * @param array|string $fields Array or coma separated list of fields to fetch
      *
-     * @return Dao|array
+     * @return Dao
      */
     private function find($id, $fields = null)
     {
@@ -381,7 +329,7 @@ abstract class Dao
     }
 
     /**
-     * Convinient function to fetch one object. Mostly will be togeather with where()
+     * convenient function to fetch one object. Mostly will be together with where()
      *
      * @access public
      * @param array|string $fields Array or coma separated list of fields to fetch
@@ -702,8 +650,9 @@ abstract class Dao
      */
     private function validate($data)
     {
-        if (!$this->dbFields)
+        if (!$this->dbFields) {
             return true;
+        }
 
         foreach ($this->dbFields as $key => $desc) {
             $type     = null;

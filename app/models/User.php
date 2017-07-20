@@ -4,31 +4,17 @@ namespace Beauty\Model;
 
 class User extends Model
 {
-    protected $dbTable = 'dg_user';
-
+    protected $dbTable    = 'dg_user';
     protected $primaryKey = "user_id";
-
     protected $connection = "default";
-
-    protected $dbFields = array(
-        'nickname' => array('text', 'required'),
-        'pwd' => array('text', 'required'),
+    protected $dbFields   = array(
+        'nickname' => ['text', 'required'],
+        'pwd'      => ['text', 'required'],
     );
-
-    private $id;
-    private $name;
 
     public function getuser()
     {
-        $updatedrow = $this->update([
-            "nickname" => "kimhwawoon"
-        ], [
-            "user_id = " => "1000001"
-        ]);
-
-        return $this->find(["user_id"], [
-            "user_id =" => "1000001"
-        ]);
+        return $this->find("1000001");
     }
 
     public function getId()

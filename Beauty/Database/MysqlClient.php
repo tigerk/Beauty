@@ -1814,9 +1814,8 @@ class MysqlClient
     /**
      * Method attempts to prepare the SQL query
      * and throws an error if there was a problem.
-     *
      * @return mysqli_stmt
-     * @throws Exception
+     * @throws \Exception
      */
     protected function _prepareQuery()
     {

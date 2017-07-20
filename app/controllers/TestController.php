@@ -11,14 +11,10 @@ class TestController extends \Beauty\Controller
 
     public function test()
     {
-        $user           = new User();
-        $user->pwd      = 'heheda';
-        $user->nickname = 'heheda';
-        $id             = $user->save();
-        if ($id)
-            echo "user created with id = " . $id;
+        $user = new User();
+        $h = $user->getuser();
 
-        var_dump($user);
+        var_dump($h);
     }
 
     public function test2(\Beauty\Http\Request $request)
