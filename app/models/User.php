@@ -12,9 +12,17 @@ class User extends Model
         'pwd'      => ['text', 'required'],
     );
 
+    protected static function booting()
+    {
+        User::updated(function ($user)
+        {
+            var_dump($user);
+        });
+    }
+
     public function getuser()
     {
-        return $this->find("1000001");
+        return $this->find("1000010");
     }
 
     public function getId()

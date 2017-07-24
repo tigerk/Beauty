@@ -40,8 +40,6 @@
 
 namespace Beauty\Database;
 
-use Beauty\Database\Connector\MysqlConnector;
-
 abstract class Dao
 {
     /**
@@ -50,13 +48,6 @@ abstract class Dao
      * @var MysqlClient
      */
     private $dbClient;
-
-    /**
-     * Models path
-     *
-     * @var modelPath
-     */
-    protected static $modelPath;
     /**
      * An array that holds object data
      *
@@ -88,7 +79,7 @@ abstract class Dao
      *
      * @var int
      */
-    public static $pageLimit = 20;
+    protected $pageLimit = 20;
     /**
      * Variable that holds total pages count of last paginate() query
      *
@@ -120,6 +111,12 @@ abstract class Dao
      * @var string
      */
     protected $connection = "default";
+    /**
+     * The hook event.
+     *
+     * @var array
+     */
+    protected static $hooks;
 
     /**
      * @param array $data Data to preload on object creation
@@ -127,12 +124,70 @@ abstract class Dao
     public function __construct($data = null)
     {
         if (empty ($this->dbTable)) {
-            $this->dbTable = get_class($this);
+            throw new \Exception("you must confirm table name.");
         }
+
+        static::booting();
 
         if ($data) {
             $this->data = $data;
         }
+    }
+
+
+    protected static function booting()
+    {
+    }
+
+    /**
+     * Register a created model event
+     *
+     * @param  \Closure|string $callback
+     * @return void
+     */
+    public static function created($callback)
+    {
+        $name  = get_called_class();
+        $event = "created";
+        self::addHooks("model.{$name}.{$event}", $callback);
+    }
+
+    /**
+     * Register a created model event
+     *
+     * @param  \Closure|string $callback
+     * @return void
+     */
+    public static function updated($callback)
+    {
+        $name  = get_called_class();
+        $event = "updated";
+        self::addHooks("model.{$name}.{$event}", $callback);
+    }
+
+    protected static function addHooks($event, $callback)
+    {
+        self::$hooks[$event] = $callback;
+    }
+
+    /**
+     * Fire the given hook for the model.
+     *
+     * @param  string $event
+     * @param  bool $halt
+     * @return mixed
+     */
+    protected function fireModelHook($event)
+    {
+        if (!isset(self::$hooks)) {
+            return true;
+        }
+
+        // We will append the names of the class to the event to distinguish it from
+        // other model events that are fired, allowing us to listen on each model
+        // event set individually instead of catching event for all the models.
+        $event    = "model." . get_class($this) . ".{$event}";
+        return call_user_func_array(self::$hooks[$event], [$this]);
     }
 
     /**
@@ -141,6 +196,8 @@ abstract class Dao
     public function getMasterConnection()
     {
         $this->dbClient = MysqlClient::getInstance($this->connection, "master");
+
+        return $this->dbClient;
     }
 
     /**
@@ -149,6 +206,8 @@ abstract class Dao
     public function getSlaveConnection()
     {
         $this->dbClient = MysqlClient::getInstance($this->connection, "slave");
+
+        return $this->dbClient;
     }
 
     /**
@@ -158,8 +217,9 @@ abstract class Dao
      */
     public function __set($name, $value)
     {
-        if (property_exists($this, 'hidden') && array_search($name, $this->hidden) !== false)
+        if (property_exists($this, 'hidden') && array_search($name, $this->hidden) !== false) {
             return;
+        }
 
         $this->data[$name] = $value;
     }
@@ -167,55 +227,38 @@ abstract class Dao
     /**
      * Magic getter function
      *
-     * @param $name Variable name
+     * @param $name string name
      *
      * @return mixed
      */
     public function __get($name)
     {
-        if (property_exists($this, 'hidden') && array_search($name, $this->hidden) !== false)
+        if (property_exists($this, 'hidden') && array_search($name, $this->hidden) !== false) {
             return null;
-
-        if (isset ($this->data[$name]) && $this->data[$name] instanceof Dao)
-            return $this->data[$name];
-
-        if (property_exists($this, 'relations') && isset ($this->relations[$name])) {
-            $relationType = strtolower($this->relations[$name][0]);
-            $modelName    = $this->relations[$name][1];
-            switch ($relationType) {
-                case 'hasone':
-                    $key             = isset ($this->relations[$name][2]) ? $this->relations[$name][2] : $name;
-                    $obj             = new $modelName;
-                    $obj->returnType = $this->returnType;
-
-                    return $this->data[$name] = $obj->byId($this->data[$key]);
-                    break;
-                case 'hasmany':
-                    $key             = $this->relations[$name][2];
-                    $obj             = new $modelName;
-                    $obj->returnType = $this->returnType;
-
-                    return $this->data[$name] = $obj->where($key, $this->data[$this->primaryKey])->get();
-                    break;
-                default:
-                    break;
-            }
         }
 
-        if (isset ($this->data[$name]))
+        if (isset ($this->data[$name]) && $this->data[$name] instanceof Dao) {
             return $this->data[$name];
+        }
 
-        if (property_exists($this->dbClient, $name))
+        if (isset ($this->data[$name])) {
+            return $this->data[$name];
+        }
+
+        if (property_exists($this->dbClient, $name)) {
             return $this->dbClient->$name;
+        }
     }
 
     public function __isset($name)
     {
-        if (isset ($this->data[$name]))
+        if (isset ($this->data[$name])) {
             return isset ($this->data[$name]);
+        }
 
-        if (property_exists($this->dbClient, $name))
+        if (property_exists($this->dbClient, $name)) {
             return isset ($this->dbClient->$name);
+        }
     }
 
     public function __unset($name)
@@ -228,18 +271,20 @@ abstract class Dao
      */
     public function insert()
     {
-        if (!empty ($this->timestamps) && in_array("createdAt", $this->timestamps)) {
-            $this->createdAt = date("Y-m-d H:i:s");
+        if (!empty ($this->timestamps) && in_array("created_at", $this->timestamps)) {
+            $this->created_at = date("Y-m-d H:i:s");
         }
 
         $sqlData = $this->prepareData();
         if (!$this->validate($sqlData)) {
             return false;
         }
-        $this->getMasterConnection();
-        $id = $this->dbClient->insert($this->dbTable, $sqlData);
-        if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey]))
+
+        $id = $this->getMasterConnection()->insert($this->dbTable, $sqlData);
+        if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey])) {
             $this->data[$this->primaryKey] = $id;
+        }
+
         $this->isNew = false;
 
         return $id;
@@ -264,20 +309,26 @@ abstract class Dao
             }
         }
 
-        if (!empty ($this->timestamps) && in_array("updatedAt", $this->timestamps)) {
-            $this->updatedAt = date("Y-m-d H:i:s");
+        if (!empty ($this->timestamps) && in_array("updated_at", $this->timestamps)) {
+            $this->updated_at = date("Y-m-d H:i:s");
         }
 
 
-        $this->getMasterConnection();
         $sqlData = $this->prepareData();
         if (!$this->validate($sqlData)) {
             return false;
         }
 
-        $this->dbClient->where($this->primaryKey, $this->data[$this->primaryKey]);
+        $this->getMasterConnection()->where($this->primaryKey, $this->data[$this->primaryKey]);
 
-        return $this->dbClient->update($this->dbTable, $sqlData);
+        $ret = $this->dbClient->update($this->dbTable, $sqlData);
+
+        if($ret)
+        {
+            $this->fireModelHook('updated');
+        }
+
+        return $ret;
     }
 
     /**
@@ -305,8 +356,7 @@ abstract class Dao
             return false;
         }
 
-        $this->getMasterConnection();
-        $this->dbClient->where($this->primaryKey, $this->data[$this->primaryKey]);
+        $this->getMasterConnection()->where($this->primaryKey, $this->data[$this->primaryKey]);
 
         return $this->dbClient->delete($this->dbTable);
     }
@@ -322,8 +372,7 @@ abstract class Dao
      */
     private function find($id, $fields = null)
     {
-        $this->getSlaveConnection();
-        $this->dbClient->where(MysqlClient::$prefix . $this->dbTable . '.' . $this->primaryKey, $id);
+        $this->getSlaveConnection()->where($this->dbTable . '.' . $this->primaryKey, $id);
 
         return $this->getOne($fields);
     }
@@ -338,16 +387,14 @@ abstract class Dao
      */
     protected function getOne($fields = null)
     {
-        $this->processHasOneWith();
-        $results = $this->dbClient->ArrayBuilder()->getOne($this->dbTable, $fields);
+        $results = $this->dbClient->arrayBuilder()->getOne($this->dbTable, $fields);
         if ($this->dbClient->count == 0)
             return null;
 
         $this->processArrays($results);
         $this->data = $results;
-        $this->processAllWith($results);
 
-        $item        = new static ($results);
+        $item        = new static($results);
         $item->isNew = false;
 
         return $item;
@@ -365,80 +412,23 @@ abstract class Dao
      */
     protected function get($limit = null, $fields = null)
     {
-        $objects = [];
-        $this->getSlaveConnection();
-        $this->processHasOneWith();
-
-        $results = $this->dbClient->ArrayBuilder()->get($this->dbTable, $limit, $fields);
-        if ($this->dbClient->count == 0)
+        $results = $this->getSlaveConnection()->arrayBuilder()->get($this->dbTable, $limit, $fields);
+        if ($this->dbClient->count == 0) {
             return null;
+        }
 
+        $objects = [];
         foreach ($results as &$r) {
             $this->processArrays($r);
-            $this->data = $r;
-            $this->processAllWith($r, false);
-            if ($this->returnType == 'Object') {
-                $item        = new static ($r);
-                $item->isNew = false;
-                $objects[]   = $item;
-            }
+            $this->data  = $r;
+            $item        = new static ($r);
+            $item->isNew = false;
+            $objects[]   = $item;
         }
-        $this->_with = Array();
-        if ($this->returnType == 'Object')
-            return $objects;
 
-        if ($this->returnType == 'Json')
-            return json_encode($results);
+        $this->_with = [];
 
-        return $results;
-    }
-
-    /**
-     * Function to set witch hasOne or hasMany objects should be loaded togeather with a main object
-     *
-     * @access public
-     * @param string $objectName Object Name
-     *
-     * @return Dao
-     */
-    private function with($objectName)
-    {
-        if (!property_exists($this, 'relations') && !isset ($this->relations[$name]))
-            die ("No relation with name $objectName found");
-
-        $this->_with[$objectName] = $this->relations[$objectName];
-
-        return $this;
-    }
-
-    /**
-     * Function to join object with another object.
-     *
-     * @access public
-     * @param string $objectName Object Name
-     * @param string $key Key for a join from primary object
-     * @param string $joinType SQL join type: LEFT, RIGHT,  INNER, OUTER
-     * @param string $primaryKey SQL join On Second primaryKey
-     *
-     * @return Dao
-     */
-    private function join($objectName, $key = null, $joinType = 'LEFT', $primaryKey = null)
-    {
-        $joinObj = new $objectName;
-        if (!$key)
-            $key = $objectName . "id";
-
-        if (!$primaryKey)
-            $primaryKey = MysqlClient::$prefix . $joinObj->dbTable . "." . $joinObj->primaryKey;
-
-        if (!strchr($key, '.'))
-            $joinStr = MysqlClient::$prefix . $this->dbTable . ".{$key} = " . $primaryKey;
-        else
-            $joinStr = MysqlClient::$prefix . "{$key} = " . $primaryKey;
-
-        $this->dbClient->join($joinObj->dbTable, $joinStr, $joinType);
-
-        return $this;
+        return $objects;
     }
 
     /**
@@ -448,9 +438,10 @@ abstract class Dao
      */
     protected function count()
     {
-        $res = $this->dbClient->ArrayBuilder()->getValue($this->dbTable, "count(*)");
-        if (!$res)
+        $res = $this->getSlaveConnection()->arrayBuilder()->getValue($this->dbTable, "count(*)");
+        if (!$res) {
             return 0;
+        }
 
         return $res;
     }
@@ -465,29 +456,26 @@ abstract class Dao
      */
     private function paginate($page, $fields = null)
     {
-        $this->dbClient->pageLimit = self::$pageLimit;
+        $this->dbClient            = $this->getSlaveConnection();
+        $this->dbClient->pageLimit = $this->pageLimit;
         $res                       = $this->dbClient->paginate($this->dbTable, $page, $fields);
         self::$totalPages          = $this->dbClient->totalPages;
-        if ($this->dbClient->count == 0) return null;
+        if ($this->dbClient->count == 0) {
+            return null;
+        }
 
+        $objects = [];
         foreach ($res as &$r) {
             $this->processArrays($r);
-            $this->data = $r;
-            $this->processAllWith($r, false);
-            if ($this->returnType == 'Object') {
-                $item        = new static ($r);
-                $item->isNew = false;
-                $objects[]   = $item;
-            }
+            $this->data  = $r;
+            $item        = new static ($r);
+            $item->isNew = false;
+            $objects[]   = $item;
         }
-        $this->_with = Array();
-        if ($this->returnType == 'Object')
-            return $objects;
 
-        if ($this->returnType == 'Json')
-            return json_encode($res);
+        $this->_with = [];
 
-        return $res;
+        return $objects;
     }
 
     /**
@@ -502,8 +490,9 @@ abstract class Dao
      */
     public function __call($method, $arg)
     {
-        if (method_exists($this, $method))
+        if (method_exists($this, $method)) {
             return call_user_func_array(array($this, $method), $arg);
+        }
 
         call_user_func_array(array($this->dbClient, $method), $arg);
 
@@ -524,8 +513,9 @@ abstract class Dao
     {
         $obj    = new static;
         $result = call_user_func_array(array($obj, $method), $arg);
-        if (method_exists($obj, $method))
+        if (method_exists($obj, $method)) {
             return $result;
+        }
 
         return $obj;
     }
@@ -568,80 +558,20 @@ abstract class Dao
     }
 
     /**
-     * Function queries hasMany relations if needed and also converts hasOne object names
-     *
-     * @param array $data
-     */
-    private function processAllWith(&$data, $shouldReset = true)
-    {
-        if (count($this->_with) == 0)
-            return;
-
-        foreach ($this->_with as $name => $opts) {
-            $relationType = strtolower($opts[0]);
-            $modelName    = $opts[1];
-            if ($relationType == 'hasone') {
-                $obj        = new $modelName;
-                $table      = $obj->dbTable;
-                $primaryKey = $obj->primaryKey;
-
-                if (!isset ($data[$table])) {
-                    $data[$name] = $this->$name;
-                    continue;
-                }
-                if ($data[$table][$primaryKey] === null) {
-                    $data[$name] = null;
-                } else {
-                    if ($this->returnType == 'Object') {
-                        $item             = new $modelName ($data[$table]);
-                        $item->returnType = $this->returnType;
-                        $item->isNew      = false;
-                        $data[$name]      = $item;
-                    } else {
-                        $data[$name] = $data[$table];
-                    }
-                }
-                unset ($data[$table]);
-            } else
-                $data[$name] = $this->$name;
-        }
-        if ($shouldReset)
-            $this->_with = Array();
-    }
-
-    /*
-     * Function building hasOne joins for get/getOne method
-     */
-    private function processHasOneWith()
-    {
-        if (count($this->_with) == 0)
-            return;
-        foreach ($this->_with as $name => $opts) {
-            $relationType = strtolower($opts[0]);
-            $modelName    = $opts[1];
-            $key          = null;
-            if (isset ($opts[2]))
-                $key = $opts[2];
-            if ($relationType == 'hasone') {
-                $this->dbClient->setQueryOption("MYSQLI_NESTJOIN");
-                $this->join($modelName, $key);
-            }
-        }
-    }
-
-    /**
      * @param array $data
      */
     private function processArrays(&$data)
     {
         if (isset ($this->jsonFields) && is_array($this->jsonFields)) {
-            foreach ($this->jsonFields as $key)
+            foreach ($this->jsonFields as $key) {
                 $data[$key] = json_decode($data[$key]);
+            }
         }
 
         if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
-            foreach ($this->arrayFields as $key)
+            foreach ($this->arrayFields as $key) {
                 $data[$key] = explode("|", $data[$key]);
+            }
         }
     }
 
@@ -711,16 +641,18 @@ abstract class Dao
 
     private function prepareData()
     {
-        $this->errors = Array();
-        $sqlData      = Array();
+        $this->errors = [];
+        $sqlData      = [];
         if (count($this->data) == 0)
-            return Array();
+            return [];
 
-        if (method_exists($this, "preLoad"))
+        if (method_exists($this, "preLoad")) {
             $this->preLoad($this->data);
+        }
 
-        if (!$this->dbFields)
+        if (!$this->dbFields) {
             return $this->data;
+        }
 
         foreach ($this->data as $key => &$value) {
             if ($value instanceof Dao && $value->isNew == true) {

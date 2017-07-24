@@ -348,7 +348,7 @@ class MysqlClient
      *
      * @return MysqlClient
      */
-    public function ArrayBuilder()
+    public function arrayBuilder()
     {
         $this->returnType = 'array';
 
@@ -639,7 +639,7 @@ class MysqlClient
      */
     public function getValue($tableName, $column, $limit = 1)
     {
-        $res = $this->ArrayBuilder()->get($tableName, $limit, "{$column} AS retval");
+        $res = $this->arrayBuilder()->get($tableName, $limit, "{$column} AS retval");
 
         if (!$res) {
             return null;
@@ -929,7 +929,7 @@ class MysqlClient
         $joinType     = strtoupper(trim($joinType));
 
         if ($joinType && !in_array($joinType, $allowedTypes)) {
-            throw new Exception('Wrong JOIN type: ' . $joinType);
+            throw new \Exception('Wrong JOIN type: ' . $joinType);
         }
 
         if (!is_object($joinTable)) {

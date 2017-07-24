@@ -14,7 +14,10 @@ class TestController extends \Beauty\Controller
         $user = new User();
         $h = $user->getuser();
 
-        var_dump($h);
+        $h->nickname = '测试通2';
+        $h->save();
+
+//        var_dump($user);
     }
 
     public function test2(\Beauty\Http\Request $request)
