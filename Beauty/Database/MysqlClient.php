@@ -257,10 +257,9 @@ class MysqlClient
      * @param string $name
      * @return $this
      */
-    public function mysqliSetting($name, $channel)
+    public function setConnection($name)
     {
         $this->defConnectionName = $name;
-        $this->queryChannel      = $channel;
 
         return $this;
     }
@@ -286,15 +285,22 @@ class MysqlClient
      *
      * @return MysqlClient Returns the current instance.
      */
-    public static function getInstance($connection, $channel)
+    public static function getInstance($connection)
     {
         if (self::$_instance == NULL) {
             self::$_instance = new MysqlClient();
         }
 
-        self::$_instance->mysqliSetting($connection, $channel);
+        self::$_instance->setConnection($connection);
 
         return self::$_instance;
+    }
+
+    public function setQueryChannel($channel)
+    {
+        $this->queryChannel = $channel;
+
+        return $this;
     }
 
     /**

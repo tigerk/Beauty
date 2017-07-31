@@ -40,6 +40,8 @@
 
 namespace Beauty\Database;
 
+use Beauty\Database\Connector\MysqlConnector;
+
 abstract class Dao
 {
     /**
@@ -111,6 +113,9 @@ abstract class Dao
      * @var string
      */
     protected $connection = "default";
+
+    protected $channel = MysqlConnector::QUERY_SLAVE_CHANNEL;
+
     /**
      * The hook event.
      *
@@ -132,6 +137,8 @@ abstract class Dao
         if ($data) {
             $this->data = $data;
         }
+
+        $this->dbClient = MysqlClient::getInstance($this->connection);
     }
 
 
@@ -186,26 +193,17 @@ abstract class Dao
         // We will append the names of the class to the event to distinguish it from
         // other model events that are fired, allowing us to listen on each model
         // event set individually instead of catching event for all the models.
-        $event    = "model." . get_class($this) . ".{$event}";
+        $event = "model." . get_class($this) . ".{$event}";
+
         return call_user_func_array(self::$hooks[$event], [$this]);
     }
 
     /**
      * get master db connection
      */
-    public function getMasterConnection()
+    public function getMysqlConnection()
     {
-        $this->dbClient = MysqlClient::getInstance($this->connection, "master");
-
-        return $this->dbClient;
-    }
-
-    /**
-     * get slave db connection
-     */
-    public function getSlaveConnection()
-    {
-        $this->dbClient = MysqlClient::getInstance($this->connection, "slave");
+        $this->dbClient = MysqlClient::getInstance($this->connection);
 
         return $this->dbClient;
     }
@@ -267,6 +265,32 @@ abstract class Dao
     }
 
     /**
+     * 设置数据库连接
+     *
+     * @param $connection
+     * @return $this
+     */
+    private function on($connection)
+    {
+        $this->connection = $connection;
+
+        return $this;
+    }
+
+    /**
+     * 设置数据库的主从
+     *
+     * @param $channel
+     * @return $this
+     */
+    private function channel($channel)
+    {
+        $this->channel = $channel;
+
+        return $this;
+    }
+
+    /**
      * @return mixed insert id or false in case of failure
      */
     public function insert()
@@ -275,12 +299,17 @@ abstract class Dao
             $this->created_at = date("Y-m-d H:i:s");
         }
 
+        /**
+         * 连接主库
+         */
+        $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
+
         $sqlData = $this->prepareData();
         if (!$this->validate($sqlData)) {
             return false;
         }
 
-        $id = $this->getMasterConnection()->insert($this->dbTable, $sqlData);
+        $id = $this->dbClient->insert($this->dbTable, $sqlData);
         if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey])) {
             $this->data[$this->primaryKey] = $id;
         }
@@ -313,18 +342,21 @@ abstract class Dao
             $this->updated_at = date("Y-m-d H:i:s");
         }
 
+        /**
+         * 主库
+         */
+        $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
 
         $sqlData = $this->prepareData();
         if (!$this->validate($sqlData)) {
             return false;
         }
 
-        $this->getMasterConnection()->where($this->primaryKey, $this->data[$this->primaryKey]);
+        $this->getMysqlConnection()->where($this->primaryKey, $this->data[$this->primaryKey]);
 
         $ret = $this->dbClient->update($this->dbTable, $sqlData);
 
-        if($ret)
-        {
+        if ($ret) {
             $this->fireModelHook('updated');
         }
 
@@ -356,7 +388,7 @@ abstract class Dao
             return false;
         }
 
-        $this->getMasterConnection()->where($this->primaryKey, $this->data[$this->primaryKey]);
+        $this->dbClient->where($this->primaryKey, $this->data[$this->primaryKey]);
 
         return $this->dbClient->delete($this->dbTable);
     }
@@ -372,7 +404,7 @@ abstract class Dao
      */
     private function find($id, $fields = null)
     {
-        $this->getSlaveConnection()->where($this->dbTable . '.' . $this->primaryKey, $id);
+        $this->dbClient->where($this->dbTable . '.' . $this->primaryKey, $id);
 
         return $this->getOne($fields);
     }
@@ -387,6 +419,8 @@ abstract class Dao
      */
     protected function getOne($fields = null)
     {
+        $this->dbClient->setQueryChannel($this->channel);
+
         $results = $this->dbClient->arrayBuilder()->getOne($this->dbTable, $fields);
         if ($this->dbClient->count == 0)
             return null;
@@ -412,7 +446,9 @@ abstract class Dao
      */
     protected function get($limit = null, $fields = null)
     {
-        $results = $this->getSlaveConnection()->arrayBuilder()->get($this->dbTable, $limit, $fields);
+        $this->dbClient->setQueryChannel($this->channel);
+
+        $results = $this->dbClient->arrayBuilder()->get($this->dbTable, $limit, $fields);
         if ($this->dbClient->count == 0) {
             return null;
         }
@@ -438,7 +474,9 @@ abstract class Dao
      */
     protected function count()
     {
-        $res = $this->getSlaveConnection()->arrayBuilder()->getValue($this->dbTable, "count(*)");
+        $this->dbClient->setQueryChannel($this->channel);
+
+        $res = $this->dbClient->arrayBuilder()->getValue($this->dbTable, "count(*)");
         if (!$res) {
             return 0;
         }
@@ -456,7 +494,6 @@ abstract class Dao
      */
     private function paginate($page, $fields = null)
     {
-        $this->dbClient            = $this->getSlaveConnection();
         $this->dbClient->pageLimit = $this->pageLimit;
         $res                       = $this->dbClient->paginate($this->dbTable, $page, $fields);
         self::$totalPages          = $this->dbClient->totalPages;
@@ -528,7 +565,6 @@ abstract class Dao
     public function toArray()
     {
         $data = $this->data;
-        $this->processAllWith($data);
         foreach ($data as &$d) {
             if ($d instanceof Dao)
                 $d = $d->data;

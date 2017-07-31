@@ -9,13 +9,21 @@ class User extends Model
     protected $connection = "default";
     protected $dbFields   = array(
         'nickname' => ['text', 'required'],
-        'pwd'      => ['text', 'required'],
+        'pwd'      => ['text'],
+        'user_id'  => ['int'],
     );
+
+    /**
+     * 新增和更新不允许更新该字段，单条获取无法获取该内容
+     * @var array
+     */
+    protected $hidden = [
+        'pwd'
+    ];
 
     protected static function booting()
     {
-        User::updated(function ($user)
-        {
+        User::updated(function ($user) {
             var_dump($user);
         });
     }
