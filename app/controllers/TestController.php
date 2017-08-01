@@ -10,7 +10,9 @@ class TestController extends \Beauty\Controller
     public function test()
     {
         \Beauty\Cache\MemcacheClient::getInstance()->tags("tag1")->put("test1", "kimhwawoon");
-        $cache = \Beauty\Cache\MemcacheClient::getInstance()->tags("tag1")->get("test1");
+        $cache = \Beauty\Cache\MemcacheClient::getInstance()->tags("tag1")->get("test2", function () {
+            return \Beauty\Model\User::get(10);
+        });
         var_dump($cache);
     }
 

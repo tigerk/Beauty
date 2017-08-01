@@ -96,9 +96,9 @@ class App
 
     public function group($filter, $success)
     {
-        $visible = call_user_func($filter);
+        $visible = $filter instanceof \Closure ? $filter() : $filter;
         if ($visible) {
-            call_user_func($success);
+            $success();
         } else {
             $this->allowed = false;
         }

@@ -9,8 +9,9 @@
  */
 $app->get('/recipe/s/[0-9]+/[0-9]+', 'RecipeController@searchRecipe');
 
-$app->group(function () {
-    return false;
+$app->group(function () use (&$app) {
+    var_dump($app);
+    return true;
 }, function () use (&$app) {
     $app->get('/', 'TestController@test');
 });

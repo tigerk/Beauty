@@ -86,7 +86,7 @@ class MemcacheClient
      * Retrieve an item from the cache by key.
      *
      * @param  string $key
-     * @param  callable $cb
+     * @param  mix $default
      * @return mixed
      */
     public function get($key, $default = NULL)
@@ -95,15 +95,9 @@ class MemcacheClient
 
         $value = $memcached->get($this->prefix . $key);
 
-        if ($memcached->getResultCode() == 0) {
-            if (!$value && $default != NULL) {
-                if (is_callable($default)) {
-                    return call_user_func($default);
-                } else {
-                    return $default;
-                }
-            }
-
+        if ($memcached->getResultCode() == Memcached::RES_NOTFOUND) {
+            return $default instanceof \Closure ? $default() : $default;
+        } elseif ($memcached->getResultCode() == 0) {
             return $value;
         }
     }
