@@ -20,9 +20,12 @@ class RecipeController extends \Beauty\Controller
 
         $users = \Beauty\Model\User::orderBy("user_id")->get([30, 10]);
 
+        $ids = [];
         foreach ($users as $user) {
-            echo $user->user_id . "\n";
+            $ids[] = $user->user_id;
         }
+
+        return json_encode($ids);
     }
 
 }

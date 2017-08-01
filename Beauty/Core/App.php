@@ -98,7 +98,9 @@ class App
     public function run()
     {
         $callable = $this->dispatchRequest($this->request, $this->response);
-        call_user_func($callable, $this->request);
+        $content = call_user_func($callable, $this->request);
+
+        $this->response->setContent($content)->send();
     }
 
     /**
