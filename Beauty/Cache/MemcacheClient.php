@@ -17,9 +17,23 @@ class MemcacheClient
      *
      * @var string
      */
-    protected      $prefix;
-    private        $hashring;
+    protected $prefix;
+
+    protected $cacheTag;
+
+    /**
+     * @var HashRing
+     */
+    private $hashring;
+
+    /**
+     * @var
+     */
     private static $connections;
+
+    /**
+     * @var
+     */
     private static $_instance;
 
     function __construct()
@@ -53,8 +67,10 @@ class MemcacheClient
             return self::$connections[$server];
         }
 
+        list($host, $port) = explode(":", $server);
+
         $memcached = new Memcached();
-        $memcached->addServer($server['host'], $server['port'], $server['weight']);
+        $memcached->addServer($host, $port);
 
         // check memcache connection
         if ($memcached->getVersion() === false) {
@@ -92,6 +108,13 @@ class MemcacheClient
         }
     }
 
+    public function tags($key)
+    {
+        $this->cacheTag = $key;
+
+        return $this;
+    }
+
     /**
      * Store an item in the cache for a given number of minutes.
      *
@@ -100,9 +123,35 @@ class MemcacheClient
      * @param  int $seconds
      * @return void
      */
-    public function put($key, $value, $seconds)
+    public function put($key, $value, $seconds = 0)
     {
         $this->connect($key)->set($this->prefix . $key, $value, $seconds);
+
+        $this->saveKey2Tag("set", $this->prefix . $key);
+
+    }
+
+    /**
+     * save key on tags
+     *
+     * @param $func
+     * @param $key
+     */
+    private function saveKey2Tag($func, $key)
+    {
+        if ($this->cacheTag) {
+
+            // First get the tags
+            $siteTags = $this->get($this->cacheTag);
+
+            if (!in_array($key, $siteTags)) {
+                $siteTags[] = $key;
+            }
+
+            call_user_func_array([$this->connect($this->cacheTag), $func], [$this->prefix . $this->cacheTag, $siteTags]);
+
+            $this->cacheTag = NULL;
+        }
     }
 
     /**
@@ -114,7 +163,10 @@ class MemcacheClient
      */
     public function increment($key, $value = 1)
     {
+        $this->saveKey2Tag("increment", $this->prefix . $key);
+
         return $this->connect($key)->increment($this->prefix . $key, $value);
+
     }
 
     /**
@@ -126,6 +178,8 @@ class MemcacheClient
      */
     public function decrement($key, $value = 1)
     {
+        $this->saveKey2Tag("decrement", $this->prefix . $key);
+
         return $this->connect($key)->decrement($this->prefix . $key, $value);
     }
 
@@ -150,6 +204,19 @@ class MemcacheClient
     public function forget($key)
     {
         $this->connect($key)->delete($this->prefix . $key);
+    }
+
+    public function clearTag($tag)
+    {
+        $tagkeys = $this->get($tag);
+
+        foreach ($tagkeys as $key) {
+            $this->forget($key);
+        }
+
+        $this->forget($tag);
+
+        $this->cacheTag = NULL;
     }
 
     /**

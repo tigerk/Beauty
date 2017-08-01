@@ -11,7 +11,7 @@ return [
         "prefix" => "",
         "hosts"  => array(
             array(
-                'host'   => '192.168.1.235',
+                'host'   => '192.168.33.10',
                 'port'   => 11211,
                 'weight' => 100
             )

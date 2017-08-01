@@ -59,6 +59,12 @@ class App
         $config = $this->config->get('app');
 
         date_default_timezone_set($config['timezone']);
+
+        if (!$config['debug']) {
+            error_reporting(0);
+            set_exception_handler("handleException");
+        } else {
+        }
     }
 
     /**

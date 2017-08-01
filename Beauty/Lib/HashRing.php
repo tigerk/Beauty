@@ -485,8 +485,8 @@ class HashRing
     {
         foreach ($nodes as $node) {
             isset($node['weight']) ? $weight = $node['weight'] : $weight = 1;
-            if (isset($node['ip']) && isset($node['port'])) {
-                $server                 = sprintf("%s:%s", $node['ip'], $node['port']);
+            if (isset($node['host']) && isset($node['port'])) {
+                $server                 = sprintf("%s:%s", $node['host'], $node['port']);
                 $this->servers[$server] = $weight;
                 $this->serverCount++;
             }
