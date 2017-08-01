@@ -20,6 +20,7 @@ class MemcacheClient
     protected      $prefix;
     private        $hashring;
     private static $connections;
+    private static $_instance;
 
     function __construct()
     {
@@ -27,6 +28,15 @@ class MemcacheClient
         $this->prefix   = $this->config['memcached']['prefix'];
         $this->hashring = new HashRing();
         $this->hashring->add($this->config['memcached']['hosts']);
+    }
+
+    public static function getInstance()
+    {
+        if (self::$_instance == NULL) {
+            self::$_instance = new MemcacheClient();
+        }
+
+        return self::$_instance;
     }
 
     /**
@@ -60,15 +70,24 @@ class MemcacheClient
      * Retrieve an item from the cache by key.
      *
      * @param  string $key
+     * @param  callable $cb
      * @return mixed
      */
-    public function get($key)
+    public function get($key, $default = NULL)
     {
         $memcached = $this->connect($key);
 
         $value = $memcached->get($this->prefix . $key);
 
         if ($memcached->getResultCode() == 0) {
+            if (!$value && $default != NULL) {
+                if (is_callable($default)) {
+                    return call_user_func($default);
+                } else {
+                    return $default;
+                }
+            }
+
             return $value;
         }
     }
