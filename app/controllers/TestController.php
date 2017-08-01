@@ -1,7 +1,5 @@
 <?php
 
-use \Beauty\Model\User;
-
 class TestController extends \Beauty\Controller
 {
     public function __construct()
@@ -11,8 +9,9 @@ class TestController extends \Beauty\Controller
 
     public function test()
     {
-        $userlist = User::where("user_id","19015189")->get(10);
-        var_dump($userlist);
+        $cache = \Beauty\Cache\MemcacheClient::getInstance()->get("nihao!");
+
+        var_dump($cache);
     }
 
     public function test2(\Beauty\Http\Request $request)

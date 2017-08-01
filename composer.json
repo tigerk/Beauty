@@ -19,7 +19,8 @@
         ],
         "files": [
           "Beauty/paths.php",
-          "Beauty/errors.php"
+          "Beauty/errors.php",
+          "app/helper.php"
         ]
     }
 }
