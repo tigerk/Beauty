@@ -127,7 +127,9 @@ class App
         $callable = $this->dispatchRequest($this->request, $this->response);
         $content  = call_user_func($callable, $this->request);
 
-        header('Content-Type: application/json; charset=utf-8');
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
         $this->response->setContent($content)->send();
     }
 
