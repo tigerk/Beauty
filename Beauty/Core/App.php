@@ -98,8 +98,9 @@ class App
     public function run()
     {
         $callable = $this->dispatchRequest($this->request, $this->response);
-        $content = call_user_func($callable, $this->request);
+        $content  = call_user_func($callable, $this->request);
 
+        header('Content-Type: application/json; charset=utf-8');
         $this->response->setContent($content)->send();
     }
 
