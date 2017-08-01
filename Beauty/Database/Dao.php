@@ -114,6 +114,11 @@ abstract class Dao
      */
     protected $connection = "default";
 
+    /**
+     * current connection channel, master or slave
+     *
+     * @var string
+     */
     protected $channel = MysqlConnector::QUERY_SLAVE_CHANNEL;
 
     /**
