@@ -8,8 +8,10 @@ class UserTest extends TestCase
 {
     public function testGetuser()
     {
-        $user = new User();
-        $value = $user->getuser();
-        $this->assertEquals($value[0]['user_id'], 'user@example.com');
+        $userlist = \Beauty\Model\User::where("user_id","19015189")->getOne();
+
+        $user = $userlist->toArray();
+
+        $this->assertEquals($user['user_id'], 'user@example.com');
     }
 }

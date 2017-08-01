@@ -425,7 +425,6 @@ abstract class Dao
     protected function getOne($fields = null)
     {
         $this->dbClient->setQueryChannel($this->channel);
-
         $results = $this->dbClient->arrayBuilder()->getOne($this->dbTable, $fields);
         if ($this->dbClient->count == 0)
             return null;
