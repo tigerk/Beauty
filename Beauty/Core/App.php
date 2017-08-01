@@ -28,7 +28,14 @@ class App
      */
     protected $responded = false;
 
-    static $instance;
+    protected $allowed = true;
+
+    /**
+     * App instance
+     *
+     * @var
+     */
+    static $_instance;
 
     /**
      * initialize App
@@ -87,6 +94,16 @@ class App
         return $this->mapRoute($args, Http\Request::METHOD_POST);
     }
 
+    public function group($filter, $success)
+    {
+        $visible = call_user_func($filter);
+        if ($visible) {
+            call_user_func($success);
+        } else {
+            $this->allowed = false;
+        }
+    }
+
     /**
      * 设置路由
      * @param $mapping array 映射关系
@@ -103,6 +120,10 @@ class App
      */
     public function run()
     {
+        if (!$this->allowed) {
+            return;
+        }
+
         $callable = $this->dispatchRequest($this->request, $this->response);
         $content  = call_user_func($callable, $this->request);
 
@@ -163,8 +184,8 @@ class App
      */
     public static function __callStatic($method, $parameters)
     {
-        if (isset(self::$instance->$method)) {
-            return self::$instance->$method;
+        if (isset(self::$_instance->$method)) {
+            return self::$_instance->$method;
         }
 
         throw new \MethodNotFoundException('method not found!');
@@ -172,8 +193,8 @@ class App
 
     public function instance($ins)
     {
-        if (!isset(self::$instance)) {
-            self::$instance = $ins;
+        if (!isset(self::$_instance)) {
+            self::$_instance = $ins;
         }
     }
 }
