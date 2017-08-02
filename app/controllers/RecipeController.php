@@ -12,7 +12,7 @@ class RecipeController extends \Beauty\Controller
      */
     public function searchRecipe(\Beauty\Http\Request $request)
     {
-
+        echo "Db";
     }
 
 }

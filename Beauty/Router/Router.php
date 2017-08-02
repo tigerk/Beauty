@@ -2,6 +2,8 @@
 
 namespace Beauty\Router;
 
+use Beauty\Http\Request;
+
 class Router implements RouterInterface
 {
     /**
@@ -13,6 +15,26 @@ class Router implements RouterInterface
      * All route json object, numerically indexed
      */
     protected $routes;
+
+    /**
+     * Add Get Route
+     */
+    public function get()
+    {
+        $args = func_get_args();
+
+        return $this->map($args, Request::METHOD_GET);
+    }
+
+    /**
+     * add Post Route
+     */
+    public function post()
+    {
+        $args = func_get_args();
+
+        return $this->map($args, Request::METHOD_POST);
+    }
 
     /**
      * Add a route
@@ -66,7 +88,7 @@ class Router implements RouterInterface
     public function getMatchedRoutes($httpMethod, $resourceUri, $save = false)
     {
         foreach ($this->routes as $key => $val) {
-            if ($key == $resourceUri  || preg_match('#^' . $key . '$#', $resourceUri)) {
+            if ($key == $resourceUri || preg_match('#^' . $key . '$#', $resourceUri)) {
                 $this->currentRoute = $val;
                 if ($this->supportsHttpMethod($this->currentRoute, $httpMethod)) {
                     return $this->currentRoute;

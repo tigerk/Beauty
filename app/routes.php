@@ -1,23 +1,14 @@
 <?php
 
 /**
- * $app 默认不允许修改
+ * 路由配置
+ * 最先设置的路由优先触发，未经验证
  */
 
 /**
  * 菜谱搜索功能
  */
-$app->get('/recipe/s/[0-9]+/[0-9]+', 'RecipeController@searchRecipe');
-
-$app->group(function () use (&$app) {
-    var_dump($app);
-    return true;
-}, function () use (&$app) {
-    $app->get('/', 'TestController@test');
+\Beauty\App::router()->get('/recipe/s/[0-9]+/[0-9]+', 'RecipeController@searchRecipe');
+\Beauty\App::router()->get('/.*', function (\Beauty\Http\Request $request) {
+    echo 123123;
 });
-
-//$app->get('/kimhwawoon+', 'TestController@test2');
-//$app->get('/', 'TestController@test');
-//$app->get('/func/a/b/c/d', function (\Beauty\Http\Request $request) {
-//    var_dump($request->getSegment());
-//});
