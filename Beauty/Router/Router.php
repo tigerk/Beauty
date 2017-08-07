@@ -36,6 +36,14 @@ class Router implements RouterInterface
         return $this->map($args, Request::METHOD_POST);
     }
 
+    public function filter($filter, $success)
+    {
+        $visible = $filter instanceof \Closure ? $filter() : $filter;
+        if ($visible) {
+            $success();
+        }
+    }
+
     /**
      * Add a route
      * ps. here, not use object, for simple
@@ -51,7 +59,7 @@ class Router implements RouterInterface
 
         $this->routes[$pattern] = [
             "method"   => $method,
-            "callable" => $callable
+            "callable" => $callable,
         ];
     }
 
