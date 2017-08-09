@@ -8,7 +8,7 @@ class UserTest extends TestCase
 {
     public function testGetuser()
     {
-        $userlist = \Beauty\Model\User::where("user_id","19015189")->getOne();
+        $userlist = \Beauty\Model\User::where("user_id","1")->getOne();
 
         $user = $userlist->toArray();
 
