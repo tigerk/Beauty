@@ -92,8 +92,32 @@ class Request
         return $this->segments;
     }
 
-    public function getSegment()
+    public function segments()
     {
         return $this->parseSegment();
     }
-} 
+
+    public function segment($index, $default = null)
+    {
+        $segments = $this->segments();
+
+        if (array_key_exists($index, $segments)) {
+            return $segments[$index - 1];
+        }
+
+        return $default;
+    }
+
+    public function post()
+    {
+        return $_POST;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function get()
+    {
+        return $_GET;
+    }
+}
