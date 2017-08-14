@@ -94,7 +94,7 @@ class Request
 
     public function segments()
     {
-        if ($this->segments) {
+        if (!is_null($this->segments)) {
             return $this->segments;
         }
 
