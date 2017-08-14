@@ -8,6 +8,8 @@
 
 namespace Beauty\Validation;
 
+use Beauty\App;
+
 /**
  * Validation Class
  *
@@ -93,7 +95,7 @@ class Validator
      * @param  string $langDir
      * @throws \InvalidArgumentException
      */
-    public function __construct($data = array(), $fields = array(), $lang = null, $langDir = null)
+    public function __construct($data = array(), $fields = array(), $lang = null)
     {
         // Allows filtering of used input fields against optional second array of field names allowed
         // This is useful for limiting raw $_POST or $_GET data to only known fields
@@ -102,17 +104,9 @@ class Validator
         // set lang in the follow order: constructor param, static::$_lang, default to en
         $lang = $lang ?: static::lang();
 
-        // set langDir in the follow order: constructor param, static::$_langDir, default to package lang dir
-        $langDir = $langDir ?: static::langDir();
-
         // Load language file in directory
-        $langFile = rtrim($langDir, '/') . '/' . $lang . '.php';
-        if (stream_resolve_include_path($langFile)) {
-            $langMessages          = include $langFile;
-            static::$_ruleMessages = array_merge(static::$_ruleMessages, $langMessages);
-        } else {
-            throw new \InvalidArgumentException("Fail to load language file '" . $langFile . "'");
-        }
+        $langMessages          = App::config("validation-{$lang}");
+        static::$_ruleMessages = array_merge(static::$_ruleMessages, $langMessages);
     }
 
     /**
@@ -128,21 +122,6 @@ class Validator
         }
 
         return static::$_lang ?: 'zh-cn';
-    }
-
-    /**
-     * Get/set language file path
-     *
-     * @param  string $dir
-     * @return string
-     */
-    public static function langDir($dir = null)
-    {
-        if ($dir !== null) {
-            static::$_langDir = $dir;
-        }
-
-        return static::$_langDir ?: __DIR__ . '/lang';
     }
 
     /**
