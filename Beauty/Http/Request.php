@@ -107,17 +107,4 @@ class Request
 
         return $default;
     }
-
-    public function post()
-    {
-        return $_POST;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function get()
-    {
-        return $_GET;
-    }
 }
