@@ -94,6 +94,10 @@ class Request
 
     public function segments()
     {
+        if ($this->segments) {
+            return $this->segments;
+        }
+
         return $this->parseSegment();
     }
 
