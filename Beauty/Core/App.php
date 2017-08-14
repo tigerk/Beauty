@@ -94,16 +94,6 @@ class App
         return $this->mapRoute($args, Http\Request::METHOD_POST);
     }
 
-//    public function group($filter, $success)
-//    {
-//        $visible = $filter instanceof \Closure ? $filter() : $filter;
-//        if ($visible) {
-//            $success();
-//        } else {
-//            $this->allowed = false;
-//        }
-//    }
-
     /**
      * 设置路由
      * @param $mapping array 映射关系
