@@ -105,7 +105,7 @@ class Validator
         $lang = $lang ?: static::lang();
 
         // Load language file in directory
-        $langMessages          = App::config("validation-{$lang}");
+        $langMessages          = App::config()->get("validation-{$lang}");
         static::$_ruleMessages = array_merge(static::$_ruleMessages, $langMessages);
     }
 
