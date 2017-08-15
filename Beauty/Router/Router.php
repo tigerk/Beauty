@@ -17,6 +17,13 @@ class Router implements RouterInterface
     protected $routes;
 
     /**
+     * The route group attribute stack.
+     *
+     * @var array
+     */
+    protected $groupStack = [];
+
+    /**
      * Add Get Route
      */
     public function get()
@@ -36,12 +43,26 @@ class Router implements RouterInterface
         return $this->map($args, Request::METHOD_POST);
     }
 
+    /**
+     * Update the group stack with the given attributes.
+     *
+     * @param  $filter
+     * @return void
+     */
+    protected function updateGroupStack($filter)
+    {
+        $this->groupStack[] = $filter;
+    }
+
     public function filter($filter, $success)
     {
-        $visible = $filter instanceof \Closure ? $filter() : $filter;
-        if ($visible) {
+        $this->updateGroupStack($filter);
+
+        if ($success instanceof \Closure) {
             $success();
         }
+
+        array_pop($this->groupStack);
     }
 
     /**
@@ -58,14 +79,20 @@ class Router implements RouterInterface
         $callable = array_pop($mapping);
 
         $this->routes[$pattern] = [
-            "method"   => $method,
-            "callable" => $callable,
+            "method"     => $method,
+            "callable"   => $callable,
+            "middleware" => end($this->groupStack),
         ];
     }
 
     public function getCurrentRoute()
     {
         return $this->currentRoute;
+    }
+
+    public function getCurrentRouteMiddleware()
+    {
+        return $this->currentRoute['middleware'];
     }
 
     public function getCurrentRouteCallable()

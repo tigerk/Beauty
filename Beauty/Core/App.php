@@ -75,37 +75,6 @@ class App
     }
 
     /**
-     * Add Get Route
-     */
-    public function get()
-    {
-        $args = func_get_args();
-
-        return $this->mapRoute($args, Http\Request::METHOD_GET);
-    }
-
-    /**
-     * add Post Route
-     */
-    public function post()
-    {
-        $args = func_get_args();
-
-        return $this->mapRoute($args, Http\Request::METHOD_POST);
-    }
-
-    /**
-     * 设置路由
-     * @param $mapping array 映射关系
-     * @param $method string 请求方式
-     * @return Router\Route
-     */
-    public function mapRoute($mapping, $method)
-    {
-        $this->router->map($mapping, $method);
-    }
-
-    /**
      * execute action
      */
     public function run()
@@ -132,6 +101,16 @@ class App
 
         if (is_null($route)) {
             throw new \RouteNotFoundException("uri path not found allowed method!");
+        }
+
+        $filtered   = false;
+        $middleware = $this->router->getCurrentRouteMiddleware();
+        if ($middleware instanceof \Closure && is_callable($middleware)) {
+            $filtered = call_user_func($middleware, $this->request);
+        }
+
+        if (!$filtered) {
+            throw new \FilterException("uri filter not allowed!");
         }
 
         /**
