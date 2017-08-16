@@ -119,10 +119,35 @@ class MemcacheClient
      */
     public function put($key, $value, $seconds = 0)
     {
-        $this->connect($key)->set($this->prefix . $key, $value, $seconds);
+        $data = $value instanceof \Closure ? $value() : $value;
+
+        $this->connect($key)->set($this->prefix . $key, $data, $seconds);
 
         $this->saveKey2Tag("set", $this->prefix . $key);
 
+    }
+
+    /**
+     * Get an item from the cache, or store the default value.
+     *
+     * @param  string  $key
+     * @param  \DateTime|int  $minutes
+     * @param  \Closure  $callback
+     * @return mixed
+     */
+    public function remember($key, $minutes, \Closure $callback)
+    {
+        // If the item exists in the cache we will just return this immediately
+        // otherwise we will execute the given Closure and cache the result
+        // of that execution for the given number of minutes in storage.
+        if ( ! is_null($value = $this->get($key)))
+        {
+            return $value;
+        }
+
+        $this->put($key, $value = $callback(), $minutes);
+
+        return $value;
     }
 
     /**
