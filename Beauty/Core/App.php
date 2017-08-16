@@ -103,7 +103,7 @@ class App
             throw new \RouteNotFoundException("uri path not found allowed method!");
         }
 
-        $filtered   = false;
+        $filtered   = true;
         $middleware = $this->router->getCurrentRouteMiddleware();
         if ($middleware instanceof \Closure && is_callable($middleware)) {
             $filtered = call_user_func($middleware, $this->request);
