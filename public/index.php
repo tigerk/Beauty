@@ -1,11 +1,9 @@
 <?php
 
-error_reporting(E_ALL & ~E_NOTICE);
-
 /**
  * load class
  */
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 /**
  * set logger sub directory
@@ -17,6 +15,6 @@ $app = new \Beauty\App();
 /**
  * 加载路由文件
  */
-require app_path() . 'routes.php';
+require base_path() . 'routes/web.php';
 
 $app->run();

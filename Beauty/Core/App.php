@@ -71,6 +71,7 @@ class App
             error_reporting(0);
             set_exception_handler("handleException");
         } else {
+            error_reporting(E_ALL);
         }
     }
 
