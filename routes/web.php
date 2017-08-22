@@ -8,23 +8,23 @@
 /**
  * 菜谱搜索功能
  */
-\Beauty\App::router()->get('/reg/[0-9]+/[0-9]+', 'TestController@test');
+\Beauty\Core\App::router()->get('/reg/[0-9]+/[0-9]+', 'TestController@test');
 
 /**
  * 添加过滤器，过滤器true，不添加到路由器解析中。
  */
-\Beauty\App::router()->filter(function () {
+\Beauty\Core\App::router()->filter(function () {
     return true;
 }, function () {
-    \Beauty\App::router()->get('/', 'TestController@test');
+    \Beauty\Core\App::router()->get('/', 'App\Controllers\TestController@test');
 });
 
 
 /**
  * 添加过滤器，过滤器true，不添加到路由器解析中。
  */
-\Beauty\App::router()->filter(function () {
+\Beauty\Core\App::router()->filter(function () {
     return false;
 }, function () {
-    \Beauty\App::router()->get('/hehe', 'TestController@test');
+    \Beauty\Core\App::router()->get('/hehe', 'TestController@test');
 });

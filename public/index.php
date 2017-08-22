@@ -8,9 +8,12 @@ require __DIR__ . '/../vendor/autoload.php';
 /**
  * set logger sub directory
  */
-DLog::setLogger("Beauty");
+\Beauty\Log\DLog::setLogger("Beauty");
 
-$app = new \Beauty\App();
+/**
+ * 定义变量
+ */
+$app = new \Beauty\Core\App(__DIR__ . "/../");
 
 /**
  * 加载路由文件

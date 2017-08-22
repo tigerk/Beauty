@@ -1,6 +1,8 @@
 <?php
 
-namespace Beauty\Model;
+namespace App\Models;
+
+use Beauty\Core\Model;
 
 class User extends Model
 {
