@@ -12,8 +12,13 @@ class TestController extends Controller
         parent::__construct();
     }
 
-    public function test()
+    public function access(Request $request)
     {
-        return "test";
+        return "you are allowed.";
+    }
+
+    public function forbidden(Request $request)
+    {
+        return "you are forbidden.";
     }
 }
