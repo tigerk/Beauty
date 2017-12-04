@@ -3,12 +3,6 @@
     "description": "The beauty Framework.",
     "keywords": ["framework", "beauty"],
     "license": "MIT",
-    "repositories": [
-        {
-          "type": "composer",
-          "url": "http://localhost:8002/"
-        }
-    ],
     "require": {
         "php": ">=7.1.0",
         "beauty/framework": "dev-master"
