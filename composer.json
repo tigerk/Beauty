@@ -5,7 +5,8 @@
     "license": "MIT",
     "require": {
         "php": ">=7.1.0",
-        "beauty/framework": "dev-master"
+        "beauty/framework": "dev-master",
+        "beauty/library": "dev-master"
     },
     "autoload": {
         "psr-4": {

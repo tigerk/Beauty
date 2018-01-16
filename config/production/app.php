@@ -9,5 +9,5 @@ return [
     /**
      * 调试开关
      */
-    'debug' => true,
+    'debug' => false,
 ];
