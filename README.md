@@ -1,6 +1,5 @@
 # Beauty
-Php 7 简单的框架，使用composer进行了包管理。
- > 支持数据库查询自动区分主库，从库查询。
+Php 7 简单的框架，使用composer进行了包管理。以最简单的方式实现了MVC架构
 
 ## 特性
  1. 支持数据库query根据不同的sql分别使用master和slave数据库。
